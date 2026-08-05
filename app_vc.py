@@ -10,6 +10,47 @@ from hf_utils import load_custom_model_from_hf
 import numpy as np
 from pydub import AudioSegment
 import argparse
+import time
+
+# optional echo control import
+try:
+    from modules import echo_control as echo_control
+except Exception:
+    echo_control = None
+
+# helper to save numpy array to wav and optionally post-process
+
+def _save_and_postprocess(wave_array, sr):
+    os.makedirs('outputs', exist_ok=True)
+    ts = int(time.time() * 1000)
+    out_path = f'outputs/converted_{ts}.wav'
+    try:
+        import soundfile as sf
+        sf.write(out_path, wave_array, sr)
+    except Exception:
+        try:
+            from scipy.io.wavfile import write as wavwrite
+            wavwrite(out_path, sr, (wave_array * 32768.0).astype(np.int16))
+        except Exception:
+            # fallback to wave
+            import wave
+            import struct
+            with wave.open(out_path, 'wb') as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(sr)
+                frames = (wave_array * 32768.0).astype('<h').tobytes()
+                wf.writeframes(frames)
+
+    # run echo control if requested
+    try:
+        if os.environ.get('ECHO_CONTROL', 'false').lower() == 'true' and echo_control is not None:
+            processed = echo_control.process_file(out_path)
+            return processed
+    except Exception as e:
+        print('Echo control failed:', e)
+
+    return out_path
 
 # Load model and configuration
 fp16 = False
@@ -307,7 +348,10 @@ def voice_conversion(source, target, diffusion_steps, length_adjust, inference_c
                     output_wave.tobytes(), frame_rate=sr,
                     sample_width=output_wave.dtype.itemsize, channels=1
                 ).export(format="mp3", bitrate=bitrate).read()
-                yield mp3_bytes, (sr, np.concatenate(generated_wave_chunks))
+                # save full output to wav and post-process if requested
+                final_arr = np.concatenate(generated_wave_chunks)
+                out_path = _save_and_postprocess(final_arr, sr)
+                yield mp3_bytes, out_path
                 break
             output_wave = vc_wave[0, :-overlap_wave_len].cpu().numpy()
             generated_wave_chunks.append(output_wave)
@@ -328,7 +372,9 @@ def voice_conversion(source, target, diffusion_steps, length_adjust, inference_c
                 output_wave.tobytes(), frame_rate=sr,
                 sample_width=output_wave.dtype.itemsize, channels=1
             ).export(format="mp3", bitrate=bitrate).read()
-            yield mp3_bytes, (sr, np.concatenate(generated_wave_chunks))
+            final_arr = np.concatenate(generated_wave_chunks)
+            out_path = _save_and_postprocess(final_arr, sr)
+            yield mp3_bytes, out_path
             break
         else:
             output_wave = crossfade(previous_chunk.cpu().numpy(), vc_wave[0, :-overlap_wave_len].cpu().numpy(), overlap_wave_len)
