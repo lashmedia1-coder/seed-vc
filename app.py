@@ -12,7 +12,52 @@ elif torch.backends.mps.is_available():
 else:
     device = torch.device("cpu")
 
+# optional echo control import
+try:
+    from modules import echo_control as echo_control
+except Exception:
+    echo_control = None
+
+import time
+import os
+import numpy as np
+
+
 dtype = torch.float16
+
+# helper to save numpy array to wav and optionally post-process
+def _save_and_postprocess(wave_array, sr):
+    os.makedirs('outputs', exist_ok=True)
+    ts = int(time.time() * 1000)
+    out_path = f'outputs/converted_{ts}.wav'
+    try:
+        import soundfile as sf
+        sf.write(out_path, wave_array, sr)
+    except Exception:
+        try:
+            from scipy.io.wavfile import write as wavwrite
+            wavwrite(out_path, sr, (wave_array * 32768.0).astype(np.int16))
+        except Exception:
+            # fallback to wave
+            import wave
+            import struct
+            with wave.open(out_path, 'wb') as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(sr)
+                frames = (wave_array * 32768.0).astype('<h').tobytes()
+                wf.writeframes(frames)
+
+    # run echo control if requested
+    try:
+        if os.environ.get('ECHO_CONTROL', 'false').lower() == 'true' and echo_control is not None:
+            processed = echo_control.process_file(out_path)
+            return processed
+    except Exception as e:
+        print('Echo control failed:', e)
+
+    return out_path
+
 
 # Global variables to store model instances
 vc_wrapper_v1 = None
@@ -105,7 +150,7 @@ def create_v1_interface():
         "for details and updates.<br>Note that any reference audio will be forcefully clipped to 25s if beyond this length.<br> "
         "If total duration of source and reference audio exceeds 30s, source audio will be processed in chunks.<br> "
         "无需训练的 zero-shot 语音/歌声转换模型，若需本地部署查看[GitHub页面](https://github.com/Plachtaa/seed-vc)<br>"
-        "请注意，参考音频若超过 25 秒，则会被自动裁剪至此长度。<br>若源音频和参考音频的总时长超过 30 秒，源音频将被分段处理。")
+        "请注意，参考音频若超过 25 秒，则会被自动裁剪至此长度。<br>若源音频和参考音频的总时长超过 30 秒，源音频将被分段处理.")
 
     inputs = [
         gr.Audio(type="filepath", label="Source Audio / 源音频"),
@@ -127,10 +172,6 @@ def create_v1_interface():
     examples = [
         ["examples/source/yae_0.wav", "examples/reference/dingzhen_0.wav", 25, 1.0, 0.7, False, True, 0],
         ["examples/source/jay_0.wav", "examples/reference/azuma_0.wav", 25, 1.0, 0.7, True, True, 0],
-        ["examples/source/Wiz Khalifa,Charlie Puth - See You Again [vocals]_[cut_28sec].wav",
-         "examples/reference/teio_0.wav", 100, 1.0, 0.7, True, False, 0],
-        ["examples/source/TECHNOPOLIS - 2085 [vocals]_[cut_14sec].wav",
-         "examples/reference/trump_0.wav", 50, 1.0, 0.7, True, False, -12],
     ]
 
     outputs = [
