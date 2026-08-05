@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#e6f2ff"/>
+      <stop offset="1" stop-color="#f7fbff"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#g)" rx="10"/>
+
+  <!-- Header -->
+  <rect x="30" y="24" width="940" height="64" rx="8" fill="#ffffff" stroke="#cfe7ff" stroke-width="1"/>
+  <text x="50" y="66" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#1a73e8">Seed-VC — Gradio UI (placeholder screenshot)</text>
+
+  <!-- Left column: controls -->
+  <rect x="30" y="110" width="340" height="430" rx="8" fill="#ffffff" stroke="#dbefff"/>
+  <text x="50" y="140" font-family="Arial" font-size="16" fill="#333">Controls</text>
+  <rect x="50" y="160" width="280" height="36" rx="6" fill="#f0f8ff" stroke="#d4eaff"/>
+  <text x="60" y="184" font-family="Arial" font-size="13" fill="#666">Source Audio (file)</text>
+  <rect x="50" y="210" width="280" height="36" rx="6" fill="#f0f8ff" stroke="#d4eaff"/>
+  <text x="60" y="234" font-family="Arial" font-size="13" fill="#666">Reference Audio (file)</text>
+  <rect x="50" y="260" width="280" height="36" rx="6" fill="#fff" stroke="#eee"/>
+  <text x="60" y="284" font-family="Arial" font-size="13" fill="#666">Diffusion Steps: 30</text>
+  <rect x="50" y="310" width="280" height="36" rx="6" fill="#fff" stroke="#eee"/>
+  <text x="60" y="334" font-family="Arial" font-size="13" fill="#666">Length Adjust: 1.0</text>
+  <rect x="50" y="360" width="280" height="36" rx="6" fill="#fff" stroke="#eee"/>
+  <text x="60" y="384" font-family="Arial" font-size="13" fill="#666">Similarity CFG: 0.7</text>
+  <rect x="50" y="410" width="120" height="36" rx="6" fill="#1a73e8"/>
+  <text x="70" y="436" font-family="Arial" font-size="14" fill="#fff">Convert</text>
+
+  <!-- Right column: outputs -->
+  <rect x="400" y="110" width="570" height="430" rx="8" fill="#ffffff" stroke="#dbefff"/>
+  <text x="420" y="140" font-family="Arial" font-size="16" fill="#333">Outputs</text>
+
+  <!-- Stream output box -->
+  <rect x="420" y="160" width="520" height="160" rx="6" fill="#f8fafc" stroke="#eef6ff"/>
+  <text x="440" y="190" font-family="Arial" font-size="13" fill="#666">Stream Output (mp3)</text>
+  <rect x="440" y="210" width="480" height="88" rx="6" fill="#ffffff" stroke="#f1f5fb"/>
+  <text x="460" y="255" font-family="Arial" font-size="12" fill="#999">[Streamed audio chunks will appear here]</text>
+
+  <!-- Full output -->
+  <rect x="420" y="340" width="520" height="160" rx="6" fill="#f8fafc" stroke="#eef6ff"/>
+  <text x="440" y="370" font-family="Arial" font-size="13" fill="#666">Full Output (wav)</text>
+  <rect x="440" y="400" width="200" height="36" rx="6" fill="#fff" stroke="#eee"/>
+  <text x="460" y="426" font-family="Arial" font-size="12" fill="#333">outputs/converted_123456789.wav</text>
+  <rect x="660" y="400" width="160" height="36" rx="6" fill="#f0f8ff" stroke="#d4eaff"/>
+  <text x="680" y="426" font-family="Arial" font-size="12" fill="#1a73e8">Play / Download</text>
+
+  <!-- Footer note -->
+  <text x="50" y="560" font-family="Arial" font-size="12" fill="#666">This is a placeholder image showing the Gradio UI layout used by start_portable.bat. Replace with a real screenshot after running the app locally.</text>
+</svg>
