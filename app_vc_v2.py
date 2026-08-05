@@ -9,6 +9,49 @@ elif torch.backends.mps.is_available():
 else:
     device = torch.device("cpu")
 
+# optional echo control import
+try:
+    from modules import echo_control as echo_control
+except Exception:
+    echo_control = None
+
+import time
+import os
+import numpy as np
+
+
+def _save_and_postprocess(wave_array, sr):
+    os.makedirs('outputs', exist_ok=True)
+    ts = int(time.time() * 1000)
+    out_path = f'outputs/converted_{ts}.wav'
+    try:
+        import soundfile as sf
+        sf.write(out_path, wave_array, sr)
+    except Exception:
+        try:
+            from scipy.io.wavfile import write as wavwrite
+            wavwrite(out_path, sr, (wave_array * 32768.0).astype(np.int16))
+        except Exception:
+            import wave
+            import struct
+            with wave.open(out_path, 'wb') as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(sr)
+                frames = (wave_array * 32768.0).astype('<h').tobytes()
+                wf.writeframes(frames)
+
+    # run echo control if requested
+    try:
+        if os.environ.get('ECHO_CONTROL', 'false').lower() == 'true' and echo_control is not None:
+            processed = echo_control.process_file(out_path)
+            return processed
+    except Exception as e:
+        print('Echo control failed:', e)
+
+    return out_path
+
+
 dtype = torch.float16
 def load_models(args):
     from hydra.utils import instantiate
